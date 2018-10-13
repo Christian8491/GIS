@@ -11,15 +11,15 @@ using namespace std;
 // An specific center is selected (LIMA - PERÚ)
 #define LATITUD -12.049048
 #define LONGITUD -77.097067
-#define DISPLACEMENT 0.03
+#define BOUND 0.03
 
 #define TOTAL_POINTS 64
 
 template <typename T>
 struct Coordinate
 {
-	T latitude;															// [-90.0, 90.0>
-	T longitude;														// [-180.0, 180.0>
+	T latitude;				// [-90.0, 90.0>
+	T longitude;			// [-180.0, 180.0>
 	Coordinate() {}
 	Coordinate(T lat_, T long_) { latitude = lat_, longitude = long_; }
 };
@@ -27,10 +27,10 @@ struct Coordinate
 template<typename T>
 void generateLatLong(T& lat_, T& lot_)
 {
-	T minLat = LATITUD - DISPLACEMENT;
-	T maxLat = LATITUD + DISPLACEMENT;
-	T minLon = LONGITUD - DISPLACEMENT;
-	T maxLon = LONGITUD + DISPLACEMENT;
+	T minLat = LATITUD - BOUND;
+	T maxLat = LATITUD + BOUND;
+	T minLon = LONGITUD - BOUND;
+	T maxLon = LONGITUD + BOUND;
 
 	float r1 = (T)rand() / (T)RAND_MAX;
 	float r2 = (T)rand() / (T)RAND_MAX;
