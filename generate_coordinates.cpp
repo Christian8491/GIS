@@ -1,29 +1,29 @@
-/* This code generate a random vector of coordinates
-   Coordinates are into a squared bound */
+/* This code generate random coordinates. Coordinates are into a "squared" bound */
 
-#include <stdlib.h>												// rand
+#include <stdlib.h>									// rand
 #include <vector>
-#include <fstream>												// ofstream
-#include <iomanip>												// setprecision
+#include <fstream>									// ofstream
+#include <iomanip>									// setprecision
+#include <string>									// to_string
 
 using namespace std;
 
-// An specific center is selected (LIMA - PERÚ)
-#define LATITUD -12.049048
-#define LONGITUD -77.097067
-#define BOUND 0.03
-
-#define TOTAL_POINTS 64
+// An arbitrary center is selected (LIMA - PERÚ). Change this values for different data
+#define LATITUD -12.001048
+#define LONGITUD -76.007067
+#define BOUND 0.25					// kilometers
+#define TOTAL_POINTS 1024
 
 template <typename T>
 struct Coordinate
 {
-	T latitude;				// [-90.0, 90.0>
-	T longitude;			// [-180.0, 180.0>
+	T latitude;					// [-90.0, 90.0>
+	T longitude;					// [-180.0, 180.0>
 	Coordinate() {}
 	Coordinate(T lat_, T long_) { latitude = lat_, longitude = long_; }
 };
 
+// Compute random coordinates
 template<typename T>
 void generateLatLong(T& lat_, T& lot_)
 {
@@ -49,32 +49,35 @@ void generateRandomCoordinates(vector<Coordinate<T>>& vectorOfPoints)
 	}
 }
 
-template<typename T>
-void printCoordinates(vector<Coordinate<T>>& vectorOfPoints)
+// Save coordinates -- change the path
+void SaveCoordinates(vector<Coordinate<double>>& points, string path)
 {
-	for (size_t i = 0; i < vectorOfPoints.size(); ++i) {
-		printf("latitud: %.6f \t longitud: %.6f \n", vectorOfPoints[i].latitude, vectorOfPoints[i].longitude);
+	ofstream coordinatesFile;
+	coordinatesFile.open(path);
+
+	coordinatesFile << "Latitude,Longitude\n";
+	for (size_t i = 0; i < points.size(); ++i) {
+		coordinatesFile << fixed << setprecision(6) << points[i].latitude << "," << points[i].longitude;
+		coordinatesFile << "\n";
 	}
 }
 
-/* Save coordinates -- change the path */
-void SaveCoordinates(vector<Coordinate<double>>& vectorOfPoints)
+// Only to print in console
+template<typename T>
+void printCoordinates(vector<Coordinate<T>>& points)
 {
-	ofstream coordinatesFile;
-	coordinatesFile.open("Write_your_path_here/Generate_Coordinates.txt");
-
-	coordinatesFile << "Latitude,Longitude\n";
-	for (size_t i = 0; i < vectorOfPoints.size(); ++i) {
-		coordinatesFile << fixed << setprecision(6) << vectorOfPoints[i].latitude << "," << vectorOfPoints[i].longitude;
-		coordinatesFile << "\n";
+	for (size_t i = 0; i < points.size(); ++i) {
+		printf("latitud: %.6f \t longitud: %.6f \n", points[i].latitude, points[i].longitude);
 	}
 }
 
 int main()
 {
+	// Change the path HERE
+	string path = string("../../Datasets/Generate_Coordinates_") + to_string(TOTAL_POINTS) + string(".txt");
 	vector<Coordinate<double>> vectorOfPoints;
 	generateRandomCoordinates(vectorOfPoints);
-	SaveCoordinates(vectorOfPoints);
+	SaveCoordinates(vectorOfPoints, path);
 
 	return 0;
 }
