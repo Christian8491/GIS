@@ -19,7 +19,7 @@ Latitude,Longitude
 Obs 2:
 Coordinates must form a continuous spherical polygon
 
-   12°------11°	        8°--------7°
+   12°------11°         8°--------7°
   /           \        /           \
  /             10°----9°            6°
 1°                                 /
