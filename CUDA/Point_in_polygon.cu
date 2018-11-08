@@ -16,20 +16,6 @@ Latitude,Longitude
 -12.078973,-77.093252
 -12.078521,-77.071940
 
-Obs 2:
-Coordinates must form a continuous spherical polygon
-
-   12°------11°         8°--------7°
-  /           \        /           \
- /             10°----9°            6°
-1°                                 /
- \                                /
-  \                              /
-   2°------3°----------4°------5°
-
-Obs 3:
-No point should contain the north pole or south pole
-
 */
 
 #include <iostream>
@@ -66,7 +52,7 @@ void find_N(T& N)
 @param lats: vector in host of latitudes
 @param lons: vector in host of longitudes */
 template <typename T>
-void readCoordinates(T*& latitudes, T*& longitudes, T*& queryPoint, int N)
+void load_data(T*& latitudes, T*& longitudes, T*& queryPoint, int N)
 {
 	ifstream coordinatesFile;
 	coordinatesFile.open(input_path);
@@ -155,25 +141,17 @@ int main(void)
 	cudaMalloc((void**)&d_latitudes, TOTAL_SIZE_BYTES);
 	cudaMalloc((void**)&d_longitudes, TOTAL_SIZE_BYTES);
 	cudaMalloc((void**)&d_in_or_out, N * sizeof(int));
-	//cudaMalloc((void**)&d_queryPoint, 2 * sizeof(double));
 
 	// Fill data in host
-	readCoordinates(h_latitudes, h_longitudes, h_queryPoint, N);
+	load_data(h_latitudes, h_longitudes, h_queryPoint, N);
 
 	// Transfer the array host to the array device
 	cudaMemcpy(d_latitudes, h_latitudes, TOTAL_SIZE_BYTES, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_longitudes, h_longitudes, TOTAL_SIZE_BYTES, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(center, &h_queryPoint, 2 * sizeof(double));	// CONSTANT MEMORY
-
-	// wrap raw pointer with a device_ptr 
-	thrust::device_ptr<double> d_lat_ptr = thrust::device_pointer_cast(d_latitudes);
-	thrust::device_ptr<double> d_lon_ptr = thrust::device_pointer_cast(d_longitudes);
+	cudaMemcpyToSymbol(center, &h_queryPoint, 2 * sizeof(double));		// CONSTANT MEMORY
 
 	// Launch the kernel
 	point_in_polygon<double> << < 1, N >> > (d_latitudes, d_longitudes, d_in_or_out, N);
-
-	int* h_in_or_out = (int*)malloc(N * sizeof(int));
-	cudaMemcpy(h_in_or_out, d_in_or_out, N * sizeof(int), cudaMemcpyDeviceToHost);
 
 	// wrap raw pointer with a device_ptr and reduce to sum
 	thrust::device_ptr<int> d_in_out_ptr = thrust::device_pointer_cast(d_in_or_out);
