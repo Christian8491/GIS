@@ -49,8 +49,8 @@ void find_N(T& N)
 }
 
 /* This function reads the coordinates from a file and fill to two host vectors
-@param lats: vector in host of latitudes
-@param lons: vector in host of longitudes */
+/param lats: vector in host of latitudes
+/param lons: vector in host of longitudes */
 template <typename T>
 void load_data(T*& latitudes, T*& longitudes, T*& queryPoint, int N)
 {
@@ -80,10 +80,10 @@ void load_data(T*& latitudes, T*& longitudes, T*& queryPoint, int N)
 }
 
 /* Kernel for Pip
-@param lats: vector of latitudes
-@param lons: vector of longitudes
-@param in_out: contains either 0 (not cut) or 1 (cut)
-@param n: size of points */
+/param lats: vector of latitudes
+/param lons: vector of longitudes
+/param in_out: contains either 0 (not cut) or 1 (cut)
+/param n: size of points */
 template <typename T>
 __global__ void point_in_polygon(T* lats, T* lons, int* in_out ,int n)
 {
@@ -105,8 +105,8 @@ __global__ void point_in_polygon(T* lats, T* lons, int* in_out ,int n)
 	}
 }
 
-
-void printResult(int sum)
+// Print if the query point is inside the spherical polygon or not
+void print_result(int sum)
 {
 	if (sum % 2 == 0) cout << "point is outside the polygon \n" << endl;
 	else cout << "Point is inside the polygon \n" << endl;
@@ -157,7 +157,10 @@ int main(void)
 	thrust::device_ptr<int> d_in_out_ptr = thrust::device_pointer_cast(d_in_or_out);
 	int sum = thrust::reduce(d_in_out_ptr, d_in_out_ptr + N);
 
-	printResult(sum);
+	// Delete device memory
+	cudaFree(d_latitudes), cudaFree(d_longitudes), cudaFree(d_in_or_out);
+
+	print_result(sum);
 
 	return 0;
 }
