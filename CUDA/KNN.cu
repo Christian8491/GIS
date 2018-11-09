@@ -139,7 +139,7 @@ int main(void)
 		return 0;
 	}
 
-	// Size total of data
+	// Util pointers to host (h_) and device (_d)
 	double *h_latitudes, *h_longitudes, *h_queryPoint, *h_distances;
 	int* h_sequence;
 	double *d_latitudes, *d_longitudes, *d_distances;
@@ -192,6 +192,9 @@ int main(void)
 
 	// Find the K nearest latitudes and longitudes
 	getKNearest(h_latitudes, h_longitudes, h_nearest_lat, h_nearest_lon, h_sequence, K);
+
+	// Delete device memory
+	cudaFree(d_latitudes), cudaFree(d_longitudes), cudaFree(d_distances);
 
 	// Only for print results
 	printResults(N, K, h_nearest_lat, h_nearest_lon);
