@@ -1,4 +1,4 @@
-/* KNN algorithm using thrust library on CUDA
+/* KNN algorithm using thrust library on CUDA (version without kernel, only thrust)
 
 Obs:
 A knn file might contain:
