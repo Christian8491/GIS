@@ -1,8 +1,8 @@
 A point in polygon file must contain:
 1. title: Latitude, Longitude
-2. Total number of points N (int)
-3. The center(query) point (only one coordinate)
-4. Coordinates of all points (size: N)
+2. Total number of points N
+3. The query point (only one point)
+4. Coordinates of the spherical polygon (size: N)
 
 Example:
 Latitude,Longitude
