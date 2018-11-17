@@ -1,11 +1,10 @@
 /* Point in polygon (PIP) algorithm using thrust library on CUDA
 
-Obs 1:
 A point in polygon file must contain:
-1. title: Latitude, Longitude
-2. Total number of points N (int)
-3. The center(query) point (only one coordinate)
-4. Coordinates of all points (size: N)
+1. title: Latitude,Longitude
+2. Total number of points N
+3. The query point (only one point)
+4. Coordinates of the spherical polygon (size: N)
 
 Example - quadrilateral polygon:
 Latitude,Longitude
@@ -15,22 +14,23 @@ Latitude,Longitude
 -12.078513,-77.104394
 -12.078973,-77.093252
 -12.078521,-77.071940
-
 */
 
 #include <iostream>
 #include <fstream>
-#include <sstream>						// getline()
+#include <sstream>
 #include <thrust/device_vector.h>
 
 using namespace std;
 
-string input_path = "../../../Datasets/Point_in_polygon/input/poly_12.txt";	// put your path file here
+// put your path file here
+string input_path = "../../../Datasets/Point_in_polygon/input/brasil_540144.txt";
 
-__constant__ double center[2];		// It contains the latitude and longitude of the center
+// It contains the latitude ([0]) and longitude ([1]) of the query point
+__constant__ double query_point[2];		
 
-/* This function reads the size of points
-@param N: size of point in the file */
+/* This function find the size of points
+/param N: size of points in the file */
 template <typename T>
 void find_N(T& N)
 {
@@ -48,11 +48,13 @@ void find_N(T& N)
 	}
 }
 
-/* This function reads the coordinates from a file and fill to two host vectors
-/param lats: vector in host of latitudes
-/param lons: vector in host of longitudes */
+/* This function reads the coordinates from a file and fill data
+/param latitudes: latitudes
+/param longitudes: longitudes
+/param query_point: for the query point - [0] latitude, [1] longitude
+/param N: size of points in the file*/
 template <typename T>
-void load_data(T*& latitudes, T*& longitudes, T*& queryPoint, int N)
+void load_data(T*& latitudes, T*& longitudes, T*& query_point, int N)
 {
 	ifstream coordinatesFile;
 	coordinatesFile.open(input_path);
@@ -65,10 +67,9 @@ void load_data(T*& latitudes, T*& longitudes, T*& queryPoint, int N)
 
 		// For the first point - query point
 		getline(coordinatesFile, latitStr, ',');
-		queryPoint[0] = (T)atof(latitStr.c_str());
-
+		query_point[0] = (T)atof(latitStr.c_str());
 		getline(coordinatesFile, longitStr);
-		queryPoint[1] = (T)atof(longitStr.c_str());
+		query_point[1] = (T)atof(longitStr.c_str());
 
 		for (int i = 0; i < N; ++i) {
 			getline(coordinatesFile, latitStr, ',');
@@ -79,33 +80,40 @@ void load_data(T*& latitudes, T*& longitudes, T*& queryPoint, int N)
 	}
 }
 
+/* To check its orientation between two points and the query point
+/param p_x: longitud of first point
+/param p_y: latitud of first point
+/param q_x: longitud of second point
+/param q_y: latitud of second point */
+template <typename T>
+__device__ T orientation(T p_x, T p_y, T q_x, T q_y)
+{
+	return ((q_y - p_y) * (query_point[1] - q_x) - (q_x - p_x) * (query_point[0] - q_y));
+}
+
 /* Kernel for Pip
-/param lats: vector of latitudes
-/param lons: vector of longitudes
-/param in_out: contains either 0 (not cut) or 1 (cut)
+/param lats: latitudes
+/param lons: longitudes
+/param in_out: it contains either 0 or 1
 /param n: size of points */
 template <typename T>
-__global__ void point_in_polygon(T* lats, T* lons, int* in_out ,int n)
+__global__ void point_in_polygon(T* lats, T* lons, int* in_out, int n)
 {
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (idx < n) {
-		if (center[0] > 0) {
-			if (lats[idx] >= center[0]) {
-				if (lons[idx] <= center[1] && center[1] < lons[(idx + 1)%n]) in_out[idx] = 1;
-				else in_out[idx] = 0;
-			}
+		int idx_ = (idx + 1) % n;
+		if (lons[idx] <= query_point[1] && query_point[1] < lons[idx_]) {
+			if (orientation(lons[idx], lats[idx], lons[idx_], lats[idx_]) < 0) in_out[idx] = 1;
 		}
-		else {
-			if (lats[idx] <= center[0]) {
-				if (lons[idx] <= center[1] && center[1] < lons[(idx + 1) % n]) in_out[idx] = 1;
-				else in_out[idx] = 0;
-			}
+		else if (query_point[1] <= lons[idx] && lons[idx_] < query_point[1]) {
+			if (orientation(lons[idx_], lats[idx_], lons[idx], lats[idx]) < 0) in_out[idx] = 1;
 		}
+		else in_out[idx] = 0;
 	}
 }
 
-// Print if the query point is inside the spherical polygon or not
+// Only print if the query point is inside the spherical polygon or not
 void print_result(int sum)
 {
 	if (sum % 2 == 0) cout << "point is outside the polygon \n" << endl;
@@ -124,18 +132,18 @@ int main(void)
 		return 0;
 	}
 
-	// Size total of data
-	double *h_latitudes, *h_longitudes, *h_queryPoint;
+	// Utils pointers to host (h_) and device (d_)
+	double *h_latitudes, *h_longitudes, *h_query_point;
 	double *d_latitudes, *d_longitudes;
 	int* d_in_or_out;
 
-	// Data for device
+	// Size total of data in bytes
 	const int TOTAL_SIZE_BYTES = N * sizeof(double);
 
 	// Allocate CPU memory
 	h_latitudes = (double*)malloc(TOTAL_SIZE_BYTES);
 	h_longitudes = (double*)malloc(TOTAL_SIZE_BYTES);
-	h_queryPoint = (double*)malloc(2 * sizeof(double));
+	h_query_point = (double*)malloc(2 * sizeof(double));
 
 	// Allocate GPU memory
 	cudaMalloc((void**)&d_latitudes, TOTAL_SIZE_BYTES);
@@ -143,17 +151,17 @@ int main(void)
 	cudaMalloc((void**)&d_in_or_out, N * sizeof(int));
 
 	// Fill data in host
-	load_data(h_latitudes, h_longitudes, h_queryPoint, N);
+	load_data(h_latitudes, h_longitudes, h_query_point, N);
 
-	// Transfer the array host to the array device
+	// Transfer data from host to device
 	cudaMemcpy(d_latitudes, h_latitudes, TOTAL_SIZE_BYTES, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_longitudes, h_longitudes, TOTAL_SIZE_BYTES, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(center, &h_queryPoint, 2 * sizeof(double));		// CONSTANT MEMORY
+	cudaMemcpyToSymbol(query_point, &h_query_point[0], 2 * sizeof(double));
 
-	// Launch the kernel
-	point_in_polygon<double> << < 1, N >> > (d_latitudes, d_longitudes, d_in_or_out, N);
+	// Launch the kernel with 1024 threads by block
+	point_in_polygon<double> << < ceil(N / 1024), 1024 >> > (d_latitudes, d_longitudes, d_in_or_out, N);
 
-	// wrap raw pointer with a device_ptr and reduce to sum
+	// wrap raw pointer with a device_ptr and reduce (add all values)
 	thrust::device_ptr<int> d_in_out_ptr = thrust::device_pointer_cast(d_in_or_out);
 	int sum = thrust::reduce(d_in_out_ptr, d_in_out_ptr + N);
 
