@@ -23,19 +23,22 @@ Latitude,Longitude
 -12.060808,-77.126168
 */
 
-#include <stdio.h>
 #include <fstream>
 #include <thrust/sort.h>
 #include <thrust/sequence.h>
 #include <thrust/device_vector.h>
+#include <chrono>
 
 using namespace std;
 
-string input_path = "../../../Datasets/Knn/input/knn_64.txt";	// put your path file here
+// put your path file here
+string input_path = "../../../Datasets/Knn/input/knn_500k_750.txt";
 
-__constant__ __device__ double DEG_TO_RAD = 0.017453292519943295769;
-__constant__ __device__ double EARTH_RADIUS_IN_METERS = 6372797.560856;	// in meters
-__constant__ __device__ double query_point[2]; // It contains the latitude and longitude of the query point
+__constant__ double DEG_TO_RAD = 0.01745329251994329;
+__constant__ double EARTH_RADIUS = 6372797.560856;		// in meters
+
+// It contains the latitude and longitude of the query point
+__constant__ double query_point[2];
 
 template <typename T>
 void find_K_N(T& N, T& K)
@@ -98,7 +101,6 @@ void getKNearest(T*&  h_lats, T*&  h_lons, T*&  k_lats, T*&  k_lons, int*&  h_se
 	}
 }
 
-
 // With Haversine Formula
 template <typename T>
 __global__ void computeDistance(T* lats, T* lons, T* distances, int n)
@@ -106,22 +108,15 @@ __global__ void computeDistance(T* lats, T* lons, T* distances, int n)
 	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if (idx < n) {
-		T latitudeArc = (lats[idx] - query_point[0]) * DEG_TO_RAD;
-		T longitudeArc = (lons[idx] - query_point[1]) * DEG_TO_RAD;
-		T latitudeH = sin(latitudeArc * 0.5);
-		latitudeH *= latitudeH;
-		T lontitudeH = sin(longitudeArc * 0.5);
-		lontitudeH *= lontitudeH;
+		T lat_variation = (lats[idx] - query_point[0]) * DEG_TO_RAD;
+		T lon_variation = (lons[idx] - query_point[1]) * DEG_TO_RAD;
+		T partial_1 = sin(lat_variation * 0.5);
+		partial_1 *= partial_1;
+		T partial_2 = sin(lon_variation * 0.5);
+		partial_2 *= partial_2;
 		T tmp = cos(lats[idx] * DEG_TO_RAD) * cos(query_point[0] * DEG_TO_RAD);
-		distances[idx] = EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
+		distances[idx] = 2.0 * EARTH_RADIUS * asin(sqrt(partial_1 + tmp*partial_2));
 	}
-}
-
-template <typename T>
-void printResults(int N, int K, T*& h_nearest_lat, T*& h_nearest_lon)
-{
-	printf("N: %d \nK: %d \nK-NN coordinates: \n", N, K);
-	for (int i = 0; i < K; ++i) printf("%.6f, %.6f \n", h_nearest_lat[i], h_nearest_lon[i]);
 }
 
 int main(void)
@@ -136,7 +131,7 @@ int main(void)
 	}
 
 	// Util pointers to host (h_) and device (_d)
-	double *h_latitudes, *h_longitudes, *h_queryPoint, *h_distances;
+	double *h_latitudes, *h_longitudes, *h_query_point, *h_distances;
 	int* h_sequence;
 	double *d_latitudes, *d_longitudes, *d_distances;
 
@@ -148,7 +143,7 @@ int main(void)
 	h_longitudes = (double*)malloc(TOTAL_SIZE_BYTES);
 	h_distances = (double*)malloc(TOTAL_SIZE_BYTES);
 	h_sequence = (int*)malloc(TOTAL_SIZE_BYTES);
-	h_queryPoint = (double*)malloc(2 * sizeof(double));
+	h_query_point = (double*)malloc(2 * sizeof(double));
 
 	// Allocate GPU memory
 	cudaMalloc((void**)&d_latitudes, TOTAL_SIZE_BYTES);
@@ -156,18 +151,18 @@ int main(void)
 	cudaMalloc((void**)&d_distances, TOTAL_SIZE_BYTES);
 
 	// Fill data in host
-	readCoordinates(h_latitudes, h_longitudes, h_queryPoint, N);
+	readCoordinates(h_latitudes, h_longitudes, h_query_point, N);
 
 	// Transfer the array host to the array device
 	cudaMemcpy(d_latitudes, h_latitudes, TOTAL_SIZE_BYTES, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_longitudes, h_longitudes, TOTAL_SIZE_BYTES, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(query_point, &h_queryPoint, 2 * sizeof(double));		// CONSTANT MEMORY
+	cudaMemcpyToSymbol(query_point, &h_query_point[0], 2 * sizeof(double));
+
+	// Fill distances in device with the Haversine Formula
+	computeDistance << < ceil(N/1024.0), 1024 >> > (d_latitudes, d_longitudes, d_distances, N);
 
 	// wrap raw pointer with a device_ptr 
 	thrust::device_ptr<double> d_dist_ptr = thrust::device_pointer_cast(d_distances);
-
-	// Fill distances in device with the Haversine Formula
-	computeDistance << <1, N >> > (d_latitudes, d_longitudes, d_distances, N);
 
 	// Create a sequence. It work as iterator (indices to latitudes and longitudes)
 	thrust::device_ptr<int> d_sequence_ptr = thrust::device_malloc<int>(N);
@@ -182,16 +177,16 @@ int main(void)
 	h_nearest_lon = (double*)malloc(K * sizeof(double));
 
 	// Transfer the array host to the array device
-	cudaMemcpy(h_sequence, thrust::raw_pointer_cast(d_sequence_ptr), N * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_sequence, thrust::raw_pointer_cast(d_sequence_ptr), K * sizeof(int), cudaMemcpyDeviceToHost);
 
 	// Find the K nearest latitudes and longitudes
 	getKNearest(h_latitudes, h_longitudes, h_nearest_lat, h_nearest_lon, h_sequence, K);
 
-	// Delete device memory
-	cudaFree(d_latitudes), cudaFree(d_longitudes), cudaFree(d_distances);
+	// Delete host memory
+	free(h_latitudes), free(h_longitudes), free(h_distances), free(h_query_point), free(h_sequence);
 
-	// Only for print results
-	printResults(N, K, h_nearest_lat, h_nearest_lon);
+	// Delete device memory
+	cudaFree(d_latitudes), cudaFree(d_longitudes), cudaFree(d_distances), thrust::device_free(d_sequence_ptr);
 
 	return 0;
 }
