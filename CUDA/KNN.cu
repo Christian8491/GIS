@@ -27,7 +27,6 @@ Latitude,Longitude
 #include <thrust/sort.h>
 #include <thrust/sequence.h>
 #include <thrust/device_vector.h>
-#include <chrono>
 
 using namespace std;
 
@@ -135,7 +134,7 @@ int main(void)
 	int* h_sequence;
 	double *d_latitudes, *d_longitudes, *d_distances;
 
-	// Data for device
+	// Total size in bytes
 	const int TOTAL_SIZE_BYTES = N * sizeof(double);
 
 	// Allocate CPU memory
