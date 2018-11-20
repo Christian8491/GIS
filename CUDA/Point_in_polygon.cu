@@ -168,6 +168,9 @@ int main(void)
 	// Delete device memory
 	cudaFree(d_latitudes), cudaFree(d_longitudes), cudaFree(d_in_or_out);
 
+	// Delete host memory
+	free(h_latitudes), free(h_longitudes), free(h_query_point);
+
 	print_result(sum);
 
 	return 0;
