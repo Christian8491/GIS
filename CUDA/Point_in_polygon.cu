@@ -159,7 +159,7 @@ int main(void)
 	cudaMemcpyToSymbol(query_point, &h_query_point[0], 2 * sizeof(double));
 
 	// Launch the kernel with 1024 threads by block
-	point_in_polygon<double> << < ceil(N / 1024), 1024 >> > (d_latitudes, d_longitudes, d_in_or_out, N);
+	point_in_polygon<double> << < ceil(N / 1024.0), 1024 >> > (d_latitudes, d_longitudes, d_in_or_out, N);
 
 	// wrap raw pointer with a device_ptr and reduce (add all values)
 	thrust::device_ptr<int> d_in_out_ptr = thrust::device_pointer_cast(d_in_or_out);
