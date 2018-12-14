@@ -13,14 +13,13 @@ Latitude,Longitude
 -12.067450,-77.078543
 -12.043947,-77.098275
 -12.058031,-77.073309
+
+This code was implemented by Christian Córdova Estrada
 */
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <stdio.h>
-#include <thrust/device_vector.h>
-#include <iomanip>
 
 using namespace std;
 
