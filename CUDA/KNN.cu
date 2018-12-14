@@ -38,7 +38,7 @@ string input_path = "../../../Datasets/Knn/input/knn_500k_750.txt";
 __constant__ double DEG_TO_RAD = 0.01745329251994329;
 __constant__ double EARTH_RADIUS = 6372797.560856;		// in meters
 
-// It contains the latitude and longitude of the query point
+// Latitude and longitude of the query point
 __constant__ double query_point[2];
 
 template <typename T>
@@ -132,7 +132,7 @@ int main(void)
 	}
 
 	// Util pointers to host (h_) and device (_d)
-	double *h_latitudes, *h_longitudes, *h_query_point, *h_distances;
+	double *h_latitudes, *h_longitudes, *h_query_point, *h_distances, *h_nearest_lat, *h_nearest_lon;
 	int* h_sequence;
 	double *d_latitudes, *d_longitudes, *d_distances;
 
@@ -145,6 +145,8 @@ int main(void)
 	h_distances = (double*)malloc(TOTAL_SIZE_BYTES);
 	h_sequence = (int*)malloc(TOTAL_SIZE_BYTES);
 	h_query_point = (double*)malloc(2 * sizeof(double));
+	h_nearest_lat = (double*)malloc(K * sizeof(double));
+	h_nearest_lon = (double*)malloc(K * sizeof(double));
 
 	// Allocate GPU memory
 	cudaMalloc((void**)&d_latitudes, TOTAL_SIZE_BYTES);
@@ -160,7 +162,7 @@ int main(void)
 	cudaMemcpyToSymbol(query_point, &h_query_point[0], 2 * sizeof(double));
 
 	// Fill distances in device with the Haversine Formula
-	computeDistance << < ceil(N/1024.0), 1024 >> > (d_latitudes, d_longitudes, d_distances, N);
+	computeDistance << < ceil(N / 1024.0), 1024 >> > (d_latitudes, d_longitudes, d_distances, N);
 
 	// wrap raw pointer with a device_ptr 
 	thrust::device_ptr<double> d_dist_ptr = thrust::device_pointer_cast(d_distances);
@@ -171,11 +173,6 @@ int main(void)
 
 	// Sort by distances and the sequence vector must be reordered
 	thrust::sort_by_key(d_dist_ptr, d_dist_ptr + N, d_sequence_ptr, thrust::less<int>());
-
-	// Get only first K latitudes and longitudes
-	double *h_nearest_lat, *h_nearest_lon;
-	h_nearest_lat = (double*)malloc(K * sizeof(double));
-	h_nearest_lon = (double*)malloc(K * sizeof(double));
 
 	// Transfer the array host to the array device
 	cudaMemcpy(h_sequence, thrust::raw_pointer_cast(d_sequence_ptr), K * sizeof(int), cudaMemcpyDeviceToHost);
