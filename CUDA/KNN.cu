@@ -21,6 +21,8 @@ Latitude,Longitude
 -12.068602,-77.075530
 -12.036418,-77.096255
 -12.060808,-77.126168
+
+This code was implemented by Christian Córdova Estrada
 */
 
 #include <fstream>
