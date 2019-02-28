@@ -20,6 +20,9 @@ Latitude,Longitude
 This code was implemented by Christian Córdova Estrada
 */
 
+#include <thrust/partition.h>
+#include <thrust/device_ptr.h>
+
 __constant__ double DEG_TO_RAD = 0.01745329251994329;
 __constant__ double EARTH_RADIUS = 6372797.560856;		// in meters
 __constant__ double radius = 20000;	// search inside this radius
@@ -97,17 +100,16 @@ int main(void)
 	// Fill distances in device with the Haversine Formula
 	findIndexes << < ceil(N / 1024.0), 1024 >> > (d_latitudes, d_longitudes, d_positions, N);
 
-	// partition and transfer back to host
-	// An util device_pointer and use partition (ordered like {1, 5, 8, 11, -1, -1, ..., -1})
-	thrust::device_ptr<int> d_dist_ptr = thrust::device_pointer_cast(d_positions);
-	int size_end_points = thrust::partition(d_dist_ptr, d_dist_ptr + N, correct_indexes());
+	// An util device_pointer and use partition (ordered like {8, 52, 36, 2, 21, -1, -1, ..., -1})
+	thrust::device_ptr<int> d_pos_ptr = thrust::device_pointer_cast(d_positions);
+	int total_end_points = thrust::partition(d_pos_ptr, d_pos_ptr + N, correct_indexes()) - d_pos_ptr;
 
 	// Final size in bytes
-	const int FINAL_SIZE_BYTES = size_end_points * sizeof(int);
+	const int FINAL_SIZE_BYTES = total_end_points * sizeof(int);
 
 	// Allocate CPU memory, end coordinates and transfer data from device to host
 	h_positions = (int*)malloc(FINAL_SIZE_BYTES);
-	cudaMemcpy(h_positions, thrust::raw_pointer_cast(d_dist_ptr), FINAL_SIZE_BYTES, cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_positions, d_positions, FINAL_SIZE_BYTES, cudaMemcpyDeviceToHost);
 
 	// Delete host memory
 	free(h_latitudes), free(h_longitudes), free(h_query_point);
