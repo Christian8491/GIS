@@ -62,21 +62,16 @@ int main(void)
 	cudaMemcpy(d_latitudes, h_latitudes, TOTAL_SIZE_BYTES, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_longitudes, h_longitudes, TOTAL_SIZE_BYTES, cudaMemcpyHostToDevice);
 
-	// device_ptr to use max_element and min_element
-	thrust::device_ptr<double> d_lat_ptr = thrust::device_pointer_cast(d_latitudes);
-	thrust::device_ptr<double> d_lon_ptr = thrust::device_pointer_cast(d_longitudes);
-
-	// Find the positions (int) of the max, min latitudes and longitudes
-	h_min_lat_pos = thrust::min_element(d_lat_ptr, d_lat_ptr + N) - d_lat_ptr;
-	h_max_lat_pos = thrust::max_element(d_lat_ptr, d_lat_ptr + N) - d_lat_ptr;
-	h_min_lon_pos = thrust::min_element(d_lon_ptr, d_lon_ptr + N) - d_lon_ptr;
-	h_max_lon_pos = thrust::max_element(d_lon_ptr, d_lon_ptr + N) - d_lon_ptr;
+	// device_ptr to use minmax_element for both latitudes and longitudes
+	typedef thrust::device_ptr<double> double_ptr;
+	double_ptr d_lat_ptr = thrust::device_pointer_cast(d_latitudes);
+	double_ptr d_lon_ptr = thrust::device_pointer_cast(d_longitudes);
+	thrust::pair<double_ptr, double_ptr> lats = thrust::minmax_element(d_lat_ptr, d_lat_ptr + N);
+	thrust::pair<double_ptr, double_ptr> lons = thrust::minmax_element(d_lon_ptr, d_lon_ptr + N);
 
 	// Find the extrema coordinates of the max, min latitudes and longitudes
-	Coordinate<double> upper_left(h_latitudes[h_max_lat_pos], h_longitudes[h_min_lon_pos]);
-	Coordinate<double> upper_right(h_latitudes[h_max_lat_pos], h_longitudes[h_max_lon_pos]);
-	Coordinate<double> bottom_right(h_latitudes[h_min_lat_pos], h_longitudes[h_max_lon_pos]);
-	Coordinate<double> bottom_left(h_latitudes[h_min_lat_pos], h_longitudes[h_min_lon_pos]);
+	Coordinate<double> upper_left(*lats.second, *lons.first), upper_right(*lats.second, *lons.second);
+	Coordinate<double> bottom_right(*lats.first, *lons.second), bottom_left(*lats.first, *lons.first);
 
 	// Delete host memory
 	free(h_latitudes), free(h_longitudes);
