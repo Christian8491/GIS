@@ -50,3 +50,41 @@ To exit from the Postgres interface we can use:
 ```
 postgres=# \q
 ```
+
+## Useful commands
+1. To list all the databases:
+```
+postgres=# \l
+```
+
+2. To display information about the connection (like the user and port):
+```
+postgres=#\conninfo
+```
+
+3. If we want to connect to one of these databases (select one of the listed databases, for instance **sdb**):
+```
+postgres=# \c sbd
+```
+
+4. To list all tables of **sbd** database
+```
+sdb=# \dt
+              List of relations
+ Schema |      Name       | Type  |  Owner   
+--------+-----------------+-------+----------
+ public | spatial_ref_sys | table | postgres
+```
+
+5. Finally we can execute some *SQL* statements:
+```
+sdb=# select srid, auth_name, auth_srid from spatial_ref_sys limit 5;
+ srid | auth_name | auth_srid 
+------+-----------+-----------
+ 2000 | EPSG      |      2000
+ 2001 | EPSG      |      2001
+ 2002 | EPSG      |      2002
+ 2003 | EPSG      |      2003
+ 2004 | EPSG      |      2004
+(5 rows)
+```
