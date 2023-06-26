@@ -1,0 +1,1 @@
+This space will contain blogs about GIS tools like PostgreSQL, PostGIS, QGIS, Python libraries like GeoPandas, arcpy, leafmap, rasterio, Fiona, GeoPy and shapely and JavaScript libraries/modules like ArcGIS API, Google Maps SDK and LeafLeft.
