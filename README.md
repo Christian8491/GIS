@@ -1,2 +1,2 @@
-# GIS_implementations
-Code for Geographic Information System (GIS)
+# GIS
+Repository about Geographic Information System (GIS).
