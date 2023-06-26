@@ -52,39 +52,66 @@ postgres=# \q
 ```
 
 ## Useful commands
-1. To list all the databases:
+1. To display information about the connection (like the user and port):
+```
+postgres=# \conninfo
+```
+
+2. We can create a database called **sdb** using *SQL*:
+```
+postgres=# CREATE DATABASE sdb WITH OWNER = postgres;
+```
+
+3. To list all the databases:
 ```
 postgres=# \l
 ```
 
-2. To display information about the connection (like the user and port):
+4. To connect to one of these databases (select one from the above list, for instance **sdb**):
 ```
-postgres=#\conninfo
-```
-
-3. If we want to connect to one of these databases (select one of the listed databases, for instance **sdb**):
-```
-postgres=# \c sbd
+postgres=# \c sdb
 ```
 
-4. To list all tables of **sbd** database
+5. Let's create a table **sdb_table** and a couple of columns to our **sdb** database:
+```
+sdb=# CREATE TABLE sdb_table (id VARCHAR, latitude DECIMAL(6,2));
+```
+
+6. To list all **sdb**'s tables:
 ```
 sdb=# \dt
-              List of relations
- Schema |      Name       | Type  |  Owner   
---------+-----------------+-------+----------
- public | spatial_ref_sys | table | postgres
+           List of relations
+ Schema |   Name    | Type  |  Owner   
+--------+-----------+-------+----------
+ public | sdb_table | table | postgres
+(1 row)
 ```
 
-5. Finally we can execute some *SQL* statements:
+7. We can execute some *SQL* statements now:
 ```
-sdb=# select srid, auth_name, auth_srid from spatial_ref_sys limit 5;
- srid | auth_name | auth_srid 
-------+-----------+-----------
- 2000 | EPSG      |      2000
- 2001 | EPSG      |      2001
- 2002 | EPSG      |      2002
- 2003 | EPSG      |      2003
- 2004 | EPSG      |      2004
-(5 rows)
+sdb=# select * from sdb_table;
+ id | latitude 
+----+----------
+(0 rows)
+```
+
+8. To remove our recent created table **sdb_table**: 
+```
+sdb=# drop table sdb_table;
+```
+
+9. This time we woun't find tables related:
+```
+sdb=# \dt
+```
+
+10. To remove our recent created database **sdb**, we will need first to switch to another database:
+```
+sdb=# \c postgres
+postgres=# drop database sdb;
+```
+
+11. Finaly we can check whether the **sdb** database was removed:
+```
+postgres=# \l
 ```
