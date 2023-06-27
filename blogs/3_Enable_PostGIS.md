@@ -9,7 +9,7 @@ $ sudo apt install postgis
 
 ## Useful commands
 
-1. Let's create a database as we did in our [previous blog] (https://github.com/Christian8491/GIS/blob/master/blogs/2_Install_PostgreSQL.md). 
+1. Let's create a database as we did in our [previous blog](https://github.com/Christian8491/GIS/blob/master/blogs/2_Install_PostgreSQL.md). Note that **sdb** stands for spatial database, but we can use any name.
 ```
 postgres=# CREATE DATABASE sdb WITH OWNER = postgres;
 ```
@@ -51,4 +51,4 @@ We can then remove the table as we did in our previous blog.
 
 ### Installing pgAdmin
 
-We can interact directly on our PostgreSQL's command line, but we can also use [pgAdmin] (https://www.pgadmin.org/download/pgadmin-4-apt/) (read the instructions to get it). Using pgAdmin is friendly and more intuitive.
+We can interact directly on our PostgreSQL's command line, but we can also use [pgAdmin](https://www.pgadmin.org/download/pgadmin-4-apt/) (read the instructions to get it). Using pgAdmin is friendly and more intuitive.
