@@ -2,7 +2,7 @@
 
 In this tutorial we are going to feed a spatial database with data where one of the columns hold a spatial type.
 
-In our previous tutorial we created a GIS database (**sdb**). Using the same database let's create some tables with different geometries like Point, LineString and Polygon. For those who are not familiar with these geometric terms can visit the [PostGIs' Data Management](https://postgis.net/docs/using_postgis_dbmanagement.html).
+In our previous tutorial we created a GIS database (**sdb**). Using the same database let's create some tables with different geometries like **Point**, **LineString** and **Polygon**. For those who are not familiar with these geometric terms can visit the [PostGIs' Data Management](https://postgis.net/docs/using_postgis_dbmanagement.html).
 
 We are removing the ```sdb=#``` prefix from now because we are assuming some people are using the **pgAdming** platform.
 
@@ -45,7 +45,7 @@ Rio de Janeiro | BRA     | POINT(-22.92502 -43.22502)
 
 The *ST_AsText()* method returns a well-known text (WKT) representation of the current geometry.
 
-Now, let's check information like the type of geometry, X coordinate and Y coordinate.
+Now, let's check out information like the type of geometry, X coordinate and Y coordinate.
 ```
 SELECT ST_GeometryType(geom), ST_X(geom), ST_Y(geom) FROM point_table;
 ```
@@ -59,7 +59,6 @@ ST_Point        | -33.45001 |  -70.66704
 ST_Point        | -22.92502 |  -43.22502
 ```
 
-
 ### LineString Geometry
 We can also create a table containing a **LineString** column:
 ```
@@ -72,6 +71,7 @@ CREATE TABLE line_table (segment VARCHAR, geom GEOMETRY(LINESTRING, 4326));
 ```
 
 Let's feed some values into our **line_table** table according to the below image:
+
 ![LineString](/blogs/imgs/linestring.png)
 
 ```
@@ -95,10 +95,20 @@ CD      | LINESTRING(3 4,7 4)
 DE      | LINESTRING(7 4,9 2)
 ```
 
+Finally, we can check out useful information like the type of geometry, the lenght of the lines, the first point from each line and the number of points these lines contain.
+```
+SELECT ST_GeometryType(geom), ST_Length(geom), ST_AsText(ST_StartPoint(geom)), ST_NPoints(geom) FROM line_table;
+```
+
+The result for this query is:
+```
+ST_LineString   | 1.4142135623730951 | POINT(0 0) |          2
+ST_LineString   |  3.605551275463989 | POINT(1 1) |          2
+ST_LineString   |                  4 | POINT(3 4) |          2
+ST_LineString   | 2.8284271247461903 | POINT(7 4) |          2
+```
+
 ### Polygon Geometry
-
-
-
 
 \dt to see all the tables
 
