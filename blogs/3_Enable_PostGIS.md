@@ -48,6 +48,6 @@ sdb=# select srid, auth_name, auth_srid from spatial_ref_sys limit 5;
 We can then remove the table as we did in our previous blog.
 
 
-### Installing pgAdmin
+## Installing pgAdmin
 
 We can interact directly on our PostgreSQL's command line, but we can also use [pgAdmin](https://www.pgadmin.org/download/pgadmin-4-apt/) (read the instructions to get it). Using pgAdmin is friendly and more intuitive.
