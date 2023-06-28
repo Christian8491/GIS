@@ -1,6 +1,6 @@
 # Enabling PostGIS
 
-In this tutorial we are going to install [**PostGIS**](http://postgis.net), which extends PostgreSQL by adding geospatial support.
+In this tutorial we are going to install [**PostGIS**](http://postgis.net), which extends PostgreSQL by adding geospatial support. Also, we are going to create a spatial database from scratch.
 
 1. Installing PostGIS should be as easy as (make sure we already installed PostgreSQL):
 ```
@@ -46,7 +46,6 @@ sdb=# select srid, auth_name, auth_srid from spatial_ref_sys limit 5;
 ```
 
 We can then remove the table as we did in our previous blog.
-
 
 
 ### Installing pgAdmin

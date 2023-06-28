@@ -1,6 +1,6 @@
 # Installing PostgreSQL
 
-In this tutorial we are going to install [**PostgreSQL**](https://www.postgresql.org/), an open source object-relational database system, only for Ubuntu. For Windows we can find out many resources on the internet about how to get PostgreSQL.
+In this tutorial we are going to install [**PostgreSQL**](https://www.postgresql.org/), an open source object-relational database system, only for Ubuntu. For Windows we can find out many resources on the internet about how to get PostgreSQL. We also are going to play a bit with some useful commands.
 
 1. First, let's update our Ubuntu system to get newest versions of packages:
 ```
