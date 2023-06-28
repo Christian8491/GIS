@@ -72,7 +72,7 @@ CREATE TABLE line_table (segment VARCHAR, geom GEOMETRY(LINESTRING, 4326));
 ```
 
 Let's feed some values into our **line_table** table according to the below image:
-![LineString](blogs/img/linestring.png)
+![LineString](/imgs/linestring.png)
 
 ```
 INSERT INTO line_table VALUES
