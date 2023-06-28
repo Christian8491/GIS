@@ -149,8 +149,36 @@ ST_Polygon      | 22.84819196258327 |    27.5
 ```
 
 
-### Multi Geometry
-\dt to see all the tables
-Note that the column **geom** can be used for different type of geometry, so let's create multiple geometries.
-Let's put all columns together
+## Multi Geometry
+We should now have 4 tables (**spatial_ref_sys** is created by default when enabling postgis as we saw in our [previous](https://github.com/Christian8491/GIS/blob/master/blogs/3_Enable_PostGIS.md) blog):
+```
+sdb=# \dt
+ public | line_table      | table | postgres
+ public | point_table     | table | postgres
+ public | polygon_table   | table | postgres
+ public | spatial_ref_sys | table | postgres
+```
 
+Now we are ready to go, let's create a new table holding all these geometries: Point, LineString and Polygon.
+```
+CREATE TABLE geometry_table (name VARCHAR, geom geometry);
+```
+Feeding some values as we already did (reusing our registers):
+```
+INSERT INTO geometry_table VALUES
+('Point', 'POINT(-12.04801 -77.05006)'),
+('LineString', 'LINESTRING(0 0, 1 1)'),
+('Polygon', 'POLYGON((0 0,1 1,3 4,7 4,9 2,9 0,0 0))');
+```
+
+And checking out the result from a simple query:
+```
+SELECT name, ST_AsText(geom) FROM geometry_table;
+```
+
+Which produces:
+```
+Point      | POINT(-12.04801 -77.05006)
+LineString | LINESTRING(0 0,1 1)
+Polygon    | POLYGON((0 0,1 1,3 4,7 4,9 2,9 0,0 0))
+```
