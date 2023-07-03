@@ -1,16 +1,15 @@
 # Loading a dataset
 
-In this tutorial we are going to import a dataset which contains latitudes and longitudes from a CSV file. After that we are going to transform our coordinates into a new column with a geometry type.
+In this tutorial we are going to import a dataset which contains latitudes and longitudes from a CSV file. After that we are going to transform our coordinates into a new column consisting of a **geometry** type.
 
-## CSV
-We are using [cities.csv](/blogs/datasets/cities.csv) dataset for this example which holds 6 columns: *id, name, country, latitude, longitude, population*.
+We are using the [cities.csv](/blogs/datasets/cities.csv) dataset for this example which holds 6 columns: {*id, name, country, latitude, longitude, population*}.
 
 Our first step is to create a table (once we moved over the **sdb** database) holding the same fields that the csv file has.
 ```
 CREATE TABLE cities (id INTEGER, name VARCHAR, country VARCHAR, latitude REAL, longitude REAL, population BIGINT, coordinate geometry);
 ```
 
-For more details about [PostgreSQL numeric datatypes](https://www.postgresql.org/docs/current/datatype-numeric.html). Note that the **cities.csv** dataset doesn't have any geometry column, so it's expected that the **coordinate** column doesn't hold any data.
+For more details about [PostgreSQL numeric datatypes](https://www.postgresql.org/docs/current/datatype-numeric.html). Note that the **cities.csv** dataset doesn't have any geometry column, so it's expected that the **coordinate** column of the **cities** table doesn't hold any data yet.
 
 To check the current data types of each column:
 ```
@@ -37,7 +36,7 @@ The second step is to copy our local dataset to PostgreSQL:
 \copy cities(id,name,country,latitude,longitude,population) FROM '/local/path/to/cities.csv' DELIMITERS ',' CSV HEADER;
 ```
 
-The DELIMITERS ',' will let PostgreSQL know the kind of delimiter, the **CSV** tells what type of file is and the **HEADER** argument lets PostreSQL that the file contains the header as the first line. If yo run into troubles like **permission denied** try to move the **cities.csv** file to the **/tmp/** directory because this is accessible by all users.
+The DELIMITERS ',' will let PostgreSQL know the kind of delimiter, the **CSV** tells what type of file is and the **HEADER** argument lets PostreSQL that the file contains the header as the first line. If run into troubles like **permission denied** try to move the **cities.csv** file to the **/tmp/** directory because this is accessible by all users.
 
 Now, let's see how our **cities** table looks:
 ```
@@ -56,7 +55,7 @@ We should get:
 (5 rows)
 ```
 
-And as we can observe, the **coordinate** column is empty for now.
+As we can observe, the **coordinate** column is empty for now.
 
 Let's check the total number of registers:
 ```
