@@ -51,7 +51,7 @@ Now, let's check out information like the type of geometry, X coordinate and Y c
 SELECT ST_GeometryType(geom), ST_X(geom), ST_Y(geom) FROM point_table;
 ```
 
-The result for the query:
+The query results:
 ```
 ST_Point        |   4.59642 |  -74.08334
 ST_Point        | -12.04801 |  -77.05006
@@ -102,7 +102,7 @@ Finally, we can check out useful information like the type of geometry, the leng
 SELECT ST_GeometryType(geom), ST_Length(geom), ST_AsText(ST_StartPoint(geom)), ST_NPoints(geom) FROM line_table;
 ```
 
-The result for the query:
+The query results:
 ```
 ST_LineString   | 1.4142135623730951 | POINT(0 0) |          2
 ST_LineString   |  3.605551275463989 | POINT(1 1) |          2
@@ -159,7 +159,7 @@ sdb=# \dt
  public | spatial_ref_sys | table | postgres
 ```
 
-Now we are ready to go, let's create a new table holding all these geometries: Point, LineString and Polygon.
+We are ready to go, let's create a new table holding all these geometries: **Point**, **LineString** and **Polygon**.
 ```
 CREATE TABLE geometry_table (name VARCHAR, geom geometry);
 ```
@@ -171,7 +171,7 @@ INSERT INTO geometry_table VALUES
 ('Polygon', 'POLYGON((0 0,1 1,3 4,7 4,9 2,9 0,0 0))');
 ```
 
-And checking out the result from a simple query:
+And checking out the results from a simple query:
 ```
 SELECT name, ST_AsText(geom) FROM geometry_table;
 ```
